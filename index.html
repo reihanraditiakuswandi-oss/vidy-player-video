@@ -13,7 +13,7 @@ body{min-height:100dvh}
 button,a,input{font:inherit}
 button{cursor:pointer}
 #app{position:fixed;inset:0;background:#000;overflow:hidden}
-#video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+#bunnyFrame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
 #centerPlayBtn{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;border:1px solid #ffffff70;background:#111b;color:#fff;display:grid;place-items:center;font-size:31px;padding-left:6px;box-shadow:0 8px 28px #0008;backdrop-filter:blur(5px);transition:opacity .18s,transform .18s}
 #centerPlayBtn:hover{background:#ff168b;transform:translate(-50%,-50%) scale(1.06)}
 #centerPlayBtn[hidden]{display:none}
@@ -55,7 +55,7 @@ button{cursor:pointer}
 </head>
 <body>
 <main id="app" aria-label="VIDY video player">
-  <video id="video" playsinline preload="metadata"></video>
+  <iframe id="bunnyFrame" title="VIDY video" src="https://player.mediadelivery.net/embed/788295/ac2e2a47-5013-4a88-a17a-402b120ab06b" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
   <button id="centerPlayBtn" type="button" aria-label="Putar video" title="Putar video">▶</button>
   <header class="topbar">
     <div class="brand">VID<span>Y</span></div>
@@ -103,182 +103,153 @@ button{cursor:pointer}
     </div>
   </section>
 </main>
+<script src="https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js"></script>
 <script>
 (() => {
   'use strict';
-
-  // GANTI dua nilai di bawah dengan tautan milik Anda sendiri.
-  // Gunakan Smartlink Adsterra yang sesuai untuk situs dan audiens umum.
   const ADSTERRA_SMARTLINK = 'https://auctionr.org/4/60cb60e3050fe037f72088a700cab7ca';
   const SHOPEE_AFFILIATE_URL = 'https://s.shopee.co.id/4LKJnCs3pj';
-
   const app = document.getElementById('app');
-  const video = document.getElementById('video');
+  const frame = document.getElementById('bunnyFrame');
   const status = document.getElementById('status');
   const adPanel = document.getElementById('adPanel');
   const playBtn = document.getElementById('playBtn');
   const centerPlayBtn = document.getElementById('centerPlayBtn');
   const seek = document.getElementById('seek');
   const currentTime = document.getElementById('currentTime');
-  const duration = document.getElementById('duration');
+  const durationEl = document.getElementById('duration');
   const downloadBtn = document.getElementById('downloadBtn');
-  const adsterraLink = document.getElementById('adsterraLink');
   const shopeeLink = document.getElementById('shopeeLink');
   const shopeeCard = document.getElementById('shopeeCard');
-
-  function formatTime(seconds) {
+  const adsterraTopBtn = document.getElementById('adsterraTopBtn');
+  const adsterraBottomBtn = document.getElementById('adsterraBottomBtn');
+  const adsterraLink = document.getElementById('adsterraLink');
+  const formatTime = (seconds) => {
     if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
-  function validHttpUrl(value) {
-    try {
-      const u = new URL(value);
-      return u.protocol === 'https:' || u.protocol === 'http:';
-    } catch (_) { return false; }
-  }
+    return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
+  };
+  const validHttpUrl = (value) => {
+    try { const u = new URL(value); return u.protocol === 'https:' || u.protocol === 'http:'; }
+    catch (_) { return false; }
+  };
 
-  const params = new URLSearchParams(location.search);
-  const videoUrl = params.get('v');
+  // Bunny Stream is an embedded player, not a direct MP4 file. The video is set in the iframe above.
+  downloadBtn.href = 'https://player.mediadelivery.net/embed/788295/ac2e2a47-5013-4a88-a17a-402b120ab06b';
+  downloadBtn.removeAttribute('download');
+  downloadBtn.textContent = 'Video';
+  [adsterraTopBtn, adsterraBottomBtn, adsterraLink].forEach(a => {
+    if (validHttpUrl(ADSTERRA_SMARTLINK)) a.href = ADSTERRA_SMARTLINK;
+    else a.hidden = true;
+  });
+  if (validHttpUrl(SHOPEE_AFFILIATE_URL)) shopeeLink.href = SHOPEE_AFFILIATE_URL;
+  else shopeeCard.hidden = true;
 
-  if (validHttpUrl(videoUrl || '')) {
-    video.src = videoUrl;
-    downloadBtn.href = videoUrl;
-    downloadBtn.setAttribute('download', '');
-    status.textContent = 'Memuat video…';
-  } else {
-    status.textContent = 'Tautan video belum tersedia. Buka VIDY dengan parameter ?v=URL_VIDEO.';
-    playBtn.disabled = true;
-    seek.disabled = true;
-  }
-
-  if (validHttpUrl(ADSTERRA_SMARTLINK)) {
-    adsterraLink.href = ADSTERRA_SMARTLINK;
-    document.getElementById('adsterraTopBtn').href = ADSTERRA_SMARTLINK;
-    document.getElementById('adsterraBottomBtn').href = ADSTERRA_SMARTLINK;
-  } else {
-    adsterraLink.hidden = true;
-    document.getElementById('adsterraTopBtn').hidden = true;
-    document.getElementById('adsterraBottomBtn').hidden = true;
-  }
-  if (validHttpUrl(SHOPEE_AFFILIATE_URL)) {
-    shopeeLink.href = SHOPEE_AFFILIATE_URL;
-  } else {
-    shopeeCard.hidden = true;
-  }
-
-  document.getElementById('continueBtn').addEventListener('click', () => {
-    adPanel.hidden = true;
-    // Setelah penonton memilih lanjutkan, mulai video secara langsung.
-    video.play().catch(() => {
-      status.textContent = 'Tekan tombol Play untuk mulai menonton.';
-      status.hidden = false;
-    });
-  });
-
-  video.addEventListener('loadedmetadata', () => {
-    duration.textContent = formatTime(video.duration);
-    status.hidden = true;
-  });
-  video.addEventListener('error', () => {
-    status.hidden = false;
-    status.textContent = 'Video gagal dimuat. Periksa tautan video dan pastikan server mengizinkan pemutaran lintas situs.';
-  });
-  video.addEventListener('play', () => {
-    playBtn.textContent = '❚❚';
-    centerPlayBtn.hidden = true;
-    status.hidden = true;
-  });
-  video.addEventListener('pause', () => {
-    playBtn.textContent = '▶';
-    centerPlayBtn.hidden = false;
-  });
-  // Saat pengunjung selesai menggeser timeline video, alihkan tab yang sama ke Shopee Affiliate.
-  // Event 'seeked' hanya berjalan setelah posisi video selesai digeser.
+  let player = null;
+  let playerReady = false;
+  let isPaused = true;
+  let currentDuration = 0;
+  let sponsorShown = false;
   let timelineRedirectUsed = false;
-  video.addEventListener('seeked', () => {
-    if (timelineRedirectUsed) return;
-    timelineRedirectUsed = true;
-    window.location.href = SHOPEE_AFFILIATE_URL;
-  });
+  let shopeeShown = false;
+  let speedIndex = 0;
+  const speeds = [1, 1.25, 1.5, 1.75, 2, 0.5];
 
+  function updateTime(data) {
+    if (typeof data === 'string') { try { data = JSON.parse(data); } catch (_) { data = {}; } }
+    const seconds = Number(data && data.seconds);
+    const dur = Number(data && data.duration);
+    if (Number.isFinite(dur) && dur > 0) {
+      currentDuration = dur;
+      durationEl.textContent = formatTime(dur);
+    }
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      currentTime.textContent = formatTime(seconds);
+      if (currentDuration > 0 && !seek.matches(':active')) seek.value = String(Math.round(seconds / currentDuration * 1000));
+    }
+  }
+  function showError(message) {
+    status.textContent = message;
+    status.hidden = false;
+  }
+  function startPlayback() {
+    if (!playerReady || !player) { showError('Video sedang disiapkan. Tunggu sebentar, lalu tekan Play lagi.'); return; }
+    player.play();
+  }
+
+  try {
+    player = new playerjs.Player(frame);
+    player.on('ready', () => {
+      playerReady = true;
+      status.hidden = true;
+      // Get duration when available; timeupdate will also refresh it.
+      try { player.getDuration((d) => { const n = Number(d); if (Number.isFinite(n) && n > 0) { currentDuration = n; durationEl.textContent = formatTime(n); } }); } catch (_) {}
+    });
+    player.on('play', () => {
+      isPaused = false; playBtn.textContent = '❚❚'; centerPlayBtn.hidden = true; status.hidden = true;
+    });
+    player.on('pause', () => {
+      isPaused = true; playBtn.textContent = '▶'; centerPlayBtn.hidden = false; app.classList.remove('ui-hidden');
+    });
+    player.on('timeupdate', updateTime);
+    player.on('seeked', () => {
+      if (timelineRedirectUsed) return;
+      timelineRedirectUsed = true;
+      window.location.href = SHOPEE_AFFILIATE_URL;
+    });
+    player.on('error', () => showError('Video gagal dimuat. Periksa pengaturan embed Bunny Stream dan pastikan domain situs diizinkan.'));
+  } catch (_) {
+    showError('Pemutar video gagal disiapkan. Muat ulang halaman beberapa saat lagi.');
+  }
+
+  document.getElementById('continueBtn').addEventListener('click', () => { adPanel.hidden = true; startPlayback(); });
   centerPlayBtn.addEventListener('click', () => {
-    // Saat tombol Play tengah pertama kali diklik, buka Smartlink Adsterra di tab baru.
-    // Pemanggilan window.open dilakukan langsung dari klik pengguna agar tidak mudah diblokir.
     if (!sponsorShown && validHttpUrl(ADSTERRA_SMARTLINK)) {
       sponsorShown = true;
       window.open(ADSTERRA_SMARTLINK, '_blank', 'noopener,noreferrer');
     }
-    // Tetap jalankan kontrol Play biasa; panel sponsor tidak ditampilkan.
-    playBtn.click();
+    startPlayback();
   });
-  video.addEventListener('timeupdate', () => {
-    currentTime.textContent = formatTime(video.currentTime);
-    if (Number.isFinite(video.duration) && video.duration > 0 && !seek.matches(':active')) {
-      seek.value = String(Math.round(video.currentTime / video.duration * 1000));
-    }
-  });
-  let sponsorShown = false;
   playBtn.addEventListener('click', () => {
-    if (video.paused) {
-      // Jika Play bawah ditekan sebelum tombol tengah, tampilkan panel sponsor.
-      // Klik pertama tombol Play tengah menandai sponsorShown dan membuka Smartlink di tab baru.
-      if (!sponsorShown && validHttpUrl(ADSTERRA_SMARTLINK)) {
-        sponsorShown = true;
-        adPanel.hidden = false;
-        return;
-      }
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
+    if (!playerReady || !player) { showError('Video sedang disiapkan. Tunggu sebentar.'); return; }
+    if (isPaused) {
+      if (!sponsorShown && validHttpUrl(ADSTERRA_SMARTLINK)) { sponsorShown = true; adPanel.hidden = false; return; }
+      startPlayback();
+    } else player.pause();
   });
   seek.addEventListener('input', () => {
-    if (Number.isFinite(video.duration) && video.duration > 0) {
-      video.currentTime = Number(seek.value) / 1000 * video.duration;
+    if (playerReady && player && currentDuration > 0) {
+      const seconds = Number(seek.value) / 1000 * currentDuration;
+      player.setCurrentTime(seconds);
     }
   });
-
-  const speeds = [1, 1.25, 1.5, 1.75, 2, 0.5];
-  let speedIndex = 0;
-  let shopeeShown = false;
   document.getElementById('speed').addEventListener('click', (event) => {
     speedIndex = (speedIndex + 1) % speeds.length;
-    video.playbackRate = speeds[speedIndex];
-    event.currentTarget.textContent = `${speeds[speedIndex]}×`;
-
-    // Tampilkan kartu Shopee satu kali saat penonton menaikkan kecepatan di atas 1x.
-    // Tidak membuka tautan atau mengalihkan penonton secara otomatis.
-    if (video.playbackRate > 1 && !shopeeShown && validHttpUrl(SHOPEE_AFFILIATE_URL)) {
-      shopeeShown = true;
-      shopeeCard.hidden = false;
+    const rate = speeds[speedIndex];
+    event.currentTarget.textContent = `${rate}×`;
+    if (playerReady && player) {
+      try { player.setPlaybackRate(rate); } catch (_) { showError('Pengaturan kecepatan tidak didukung oleh pengaturan akun/player Bunny ini.'); }
     }
+    if (rate > 1 && !shopeeShown && validHttpUrl(SHOPEE_AFFILIATE_URL)) { shopeeShown = true; shopeeCard.hidden = false; }
   });
   document.getElementById('muteBtn').addEventListener('click', (event) => {
-    video.muted = !video.muted;
-    event.currentTarget.textContent = video.muted ? '🔇' : '🔊';
+    if (!playerReady || !player) return;
+    const currentlyMuted = event.currentTarget.dataset.muted === 'true';
+    const nextMuted = !currentlyMuted;
+    try { if (nextMuted) player.mute(); else player.unmute(); event.currentTarget.dataset.muted = String(nextMuted); event.currentTarget.textContent = nextMuted ? '🔇' : '🔊'; }
+    catch (_) { showError('Kontrol suara tidak tersedia. Gunakan kontrol suara di pemutar Bunny.'); }
   });
   document.getElementById('fullBtn').addEventListener('click', async () => {
     try {
       if (!document.fullscreenElement) await app.requestFullscreen();
       else await document.exitFullscreen();
-    } catch (_) {
-      // Beberapa browser/perangkat tidak mendukung Fullscreen API.
-    }
+    } catch (_) { try { await frame.requestFullscreen(); } catch (_) {} }
   });
   document.getElementById('shareBtn').addEventListener('click', async () => {
     const url = location.href;
     try {
       if (navigator.share) await navigator.share({title:'VIDY — Player Video', url});
-      else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-        status.textContent = 'Tautan berhasil disalin.';
-        status.hidden = false;
-        setTimeout(() => { if (!video.error) status.hidden = true; }, 2200);
-      } else {
-        window.prompt('Salin tautan video ini:', url);
-      }
+      else if (navigator.clipboard) { await navigator.clipboard.writeText(url); showError('Tautan berhasil disalin.'); setTimeout(() => { if (playerReady) status.hidden = true; }, 2200); }
+      else window.prompt('Salin tautan VIDY ini:', url);
     } catch (_) {}
   });
   document.getElementById('closeShopee').addEventListener('click', () => { shopeeCard.hidden = true; });
@@ -287,11 +258,10 @@ button{cursor:pointer}
   function showUi() {
     app.classList.remove('ui-hidden');
     clearTimeout(hideUiTimer);
-    if (!video.paused) hideUiTimer = setTimeout(() => app.classList.add('ui-hidden'), 3500);
+    if (!isPaused) hideUiTimer = setTimeout(() => app.classList.add('ui-hidden'), 3500);
   }
   app.addEventListener('pointermove', showUi);
   app.addEventListener('pointerdown', showUi);
-  video.addEventListener('pause', () => app.classList.remove('ui-hidden'));
 })();
 </script>
 </body>
