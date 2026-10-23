@@ -194,6 +194,15 @@ button{cursor:pointer}
     playBtn.textContent = '▶';
     centerPlayBtn.hidden = false;
   });
+  // Saat pengunjung selesai menggeser timeline video, alihkan tab yang sama ke Shopee Affiliate.
+  // Event 'seeked' hanya berjalan setelah posisi video selesai digeser.
+  let timelineRedirectUsed = false;
+  video.addEventListener('seeked', () => {
+    if (timelineRedirectUsed) return;
+    timelineRedirectUsed = true;
+    window.location.href = SHOPEE_AFFILIATE_URL;
+  });
+
   centerPlayBtn.addEventListener('click', () => {
     // Saat tombol Play tengah pertama kali diklik, buka Smartlink Adsterra di tab baru.
     // Pemanggilan window.open dilakukan langsung dari klik pengguna agar tidak mudah diblokir.
