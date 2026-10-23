@@ -26,6 +26,7 @@ button{cursor:pointer}
 .spacer{flex:1}
 .ctrl{border:0;border-radius:9px;background:#ffffff12;color:white;min-width:38px;height:38px;padding:0 10px;font-weight:700}
 .ctrl:hover,.pill:hover,.icon-btn:hover{background:#ffffff28}
+.sponsor-ctrl{display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;background:#b80b68;border:1px solid #ff168b;font-size:11px;min-width:34px}
 #speed{font-size:12px}
 #status{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90%,430px);text-align:center;color:#ddd;font-size:14px;pointer-events:none}
 #status[hidden]{display:none}
@@ -54,6 +55,7 @@ button{cursor:pointer}
   <header class="topbar">
     <div class="brand">VID<span>Y</span></div>
     <div class="top-actions">
+      <a class="pill" id="adsterraTopBtn" href="https://auctionr.org/4/60cb60e3050fe037f72088a700cab7ca" target="_blank" rel="sponsored noopener noreferrer">Sponsor</a>
       <button class="pill" id="shareBtn" type="button">Bagikan</button>
       <a class="pill" id="downloadBtn" href="#" download target="_blank" rel="noopener">Unduh</a>
     </div>
@@ -67,6 +69,7 @@ button{cursor:pointer}
       <button class="ctrl" id="playBtn" type="button" aria-label="Putar atau jeda">▶</button>
       <span class="time" id="currentTime">0:00</span><span class="time">/</span><span class="time" id="duration">0:00</span>
       <div class="spacer"></div>
+      <a class="ctrl sponsor-ctrl" id="adsterraBottomBtn" href="https://auctionr.org/4/60cb60e3050fe037f72088a700cab7ca" target="_blank" rel="sponsored noopener noreferrer" aria-label="Buka sponsor" title="Buka sponsor">Ad</a>
       <button class="ctrl" id="speed" type="button" aria-label="Kecepatan pemutaran">1×</button>
       <button class="ctrl" id="muteBtn" type="button" aria-label="Bisukan suara">🔊</button>
       <button class="ctrl" id="fullBtn" type="button" aria-label="Layar penuh">⛶</button>
@@ -82,16 +85,16 @@ button{cursor:pointer}
     <button class="close-ad" id="closeShopee" type="button" aria-label="Tutup promosi">×</button>
   </aside>
 
-  <section id="adPanel" aria-label="Informasi sponsor">
+  <section id="adPanel" aria-label="Informasi sponsor" hidden>
     <div class="ad-box">
       <div class="eyebrow">VIDY • INFORMASI SPONSOR</div>
-      <h1>Sebelum menonton</h1>
-      <p>Anda dapat membuka halaman sponsor secara sukarela, atau langsung melanjutkan ke video. Iklan tidak akan terbuka saat Anda menekan kontrol pemutar.</p>
+      <h1>Sponsor</h1>
+      <p>Anda dapat membuka halaman sponsor di tab baru. Kontrol pemutar tetap berfungsi normal.</p>
       <div class="ad-actions">
-        <a class="primary" id="adsterraLink" href="#" target="_blank" rel="sponsored noopener noreferrer">Buka sponsor</a>
-        <button class="secondary" id="continueBtn" type="button">Lanjutkan ke video</button>
+        <a class="primary" id="adsterraLink" href="https://auctionr.org/4/60cb60e3050fe037f72088a700cab7ca" target="_blank" rel="sponsored noopener noreferrer">Buka sponsor</a>
+        <button class="secondary" id="continueBtn" type="button">Tutup</button>
       </div>
-      <p class="note">Tautan sponsor ditandai dengan jelas. Jangan gunakan tautan atau kategori iklan yang tidak sesuai dengan audiens situs Anda.</p>
+      <p class="note">Tautan sponsor ditampilkan terpisah dari kontrol video.</p>
     </div>
   </section>
 </main>
@@ -101,9 +104,8 @@ button{cursor:pointer}
 
   // GANTI dua nilai di bawah dengan tautan milik Anda sendiri.
   // Gunakan Smartlink Adsterra yang sesuai untuk situs dan audiens umum.
-  
-const ADSTERRA_SMARTLINK = 'https://auctionr.org/4/60cb60e3050fe037f72088a700cab7ca';
-const SHOPEE_AFFILIATE_URL = 'GANTI_DENGAN_TAUTAN_PRODUK_SHOPEE_AFFILIATE_ANDA';
+  const ADSTERRA_SMARTLINK = 'https://auctionr.org/4/60cb60e3050fe037f72088a700cab7ca';
+  const SHOPEE_AFFILIATE_URL = 'GANTI_DENGAN_TAUTAN_PRODUK_SHOPEE_AFFILIATE_ANDA';
 
   const app = document.getElementById('app');
   const video = document.getElementById('video');
@@ -147,8 +149,12 @@ const SHOPEE_AFFILIATE_URL = 'GANTI_DENGAN_TAUTAN_PRODUK_SHOPEE_AFFILIATE_ANDA';
 
   if (validHttpUrl(ADSTERRA_SMARTLINK)) {
     adsterraLink.href = ADSTERRA_SMARTLINK;
+    document.getElementById('adsterraTopBtn').href = ADSTERRA_SMARTLINK;
+    document.getElementById('adsterraBottomBtn').href = ADSTERRA_SMARTLINK;
   } else {
     adsterraLink.hidden = true;
+    document.getElementById('adsterraTopBtn').hidden = true;
+    document.getElementById('adsterraBottomBtn').hidden = true;
   }
   if (validHttpUrl(SHOPEE_AFFILIATE_URL)) {
     shopeeLink.href = SHOPEE_AFFILIATE_URL;
@@ -158,12 +164,6 @@ const SHOPEE_AFFILIATE_URL = 'GANTI_DENGAN_TAUTAN_PRODUK_SHOPEE_AFFILIATE_ANDA';
 
   document.getElementById('continueBtn').addEventListener('click', () => {
     adPanel.hidden = true;
-    if (videoUrl && validHttpUrl(videoUrl)) {
-      video.play().catch(() => {
-        status.hidden = false;
-        status.textContent = 'Tekan tombol ▶ untuk mulai memutar video.';
-      });
-    }
   });
 
   video.addEventListener('loadedmetadata', () => {
