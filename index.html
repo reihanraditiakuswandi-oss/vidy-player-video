@@ -1,202 +1,249 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090b10">
-  <title>VIDY - Player Video</title>
-  <meta name="description" content="VIDY - Pemutar video online dengan tautan berbagi yang mudah.">
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: #090b10;
-      color: #f5f7fb;
-      font-family: Arial, sans-serif;
-    }
-    header {
-      height: 68px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 6%;
-      border-bottom: 1px solid #222733;
-      background: #10131b;
-    }
-    .logo { font-size: 28px; font-weight: 900; letter-spacing: 2px; }
-    .logo span { color: #63a7ff; }
-    header a, footer a { color: #b9c3d5; text-decoration: none; }
-    main { max-width: 960px; margin: 35px auto; padding: 0 18px; }
-    .player {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      border: 1px solid #262c38;
-      border-radius: 12px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    video { width: 100%; height: 100%; object-fit: contain; }
-    .placeholder { color: #9aa5b7; text-align: center; padding: 20px; }
-    .placeholder strong { display: block; font-size: 20px; margin-bottom: 8px; }
-    h1 { font-size: 24px; margin: 22px 0 8px; }
-    .muted { color: #9aa5b7; font-size: 14px; line-height: 1.6; }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
-    button, .download {
-      border: 0;
-      border-radius: 8px;
-      padding: 12px 17px;
-      background: #2678ee;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      text-decoration: none;
-      font-size: 14px;
-    }
-    button.secondary { background: #222938; }
-    .ad {
-      min-height: 90px;
-      margin: 24px 0;
-      border: 1px dashed #414958;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 15px;
-      color: #8792a5;
-      font-size: 13px;
-    }
-    .sharebox {
-      background: #141923;
-      border: 1px solid #292f3c;
-      border-radius: 10px;
-      padding: 18px;
-    }
-    .sharebox input {
-      width: 100%;
-      margin: 10px 0;
-      padding: 12px;
-      border-radius: 7px;
-      border: 1px solid #394254;
-      background: #090b10;
-      color: white;
-    }
-    footer {
-      text-align: center;
-      padding: 28px 16px;
-      border-top: 1px solid #222733;
-      color: #8993a5;
-      font-size: 13px;
-    }
-    @media (max-width: 600px) {
-      header { padding: 0 18px; }
-      main { margin-top: 20px; }
-      h1 { font-size: 20px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08080c">
+<title>VIDY — Player Video</title>
+<style>
+:root{color-scheme:dark;--pink:#ff168b;--panel:#17171f;--muted:#b9b9c5}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;background:#08080c;color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+body{min-height:100dvh}
+button,a,input{font:inherit}
+button{cursor:pointer}
+#app{position:fixed;inset:0;background:#000;overflow:hidden}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.topbar{position:absolute;z-index:5;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;padding:max(14px,env(safe-area-inset-top)) 14px 48px;background:linear-gradient(#000b,transparent);transition:opacity .2s}
+.brand{font-weight:850;letter-spacing:.12em;font-size:18px}.brand span{color:var(--pink)}
+.top-actions{margin-left:auto;display:flex;gap:8px}
+.pill,.icon-btn{border:1px solid #ffffff35;background:#111b;color:#fff;border-radius:999px;padding:9px 12px;text-decoration:none;font-size:12px;font-weight:700}
+.icon-btn{width:40px;height:40px;padding:0;display:grid;place-items:center;font-size:18px}
+.controls{position:absolute;z-index:5;left:0;right:0;bottom:0;padding:48px 14px max(14px,env(safe-area-inset-bottom));background:linear-gradient(transparent,#000b 35%,#000f);transition:opacity .2s}
+.timeline{width:100%;accent-color:var(--pink);cursor:pointer}
+.control-row{display:flex;align-items:center;gap:9px;margin-top:8px}
+.time{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;color:#eee}
+.spacer{flex:1}
+.ctrl{border:0;border-radius:9px;background:#ffffff12;color:white;min-width:38px;height:38px;padding:0 10px;font-weight:700}
+.ctrl:hover,.pill:hover,.icon-btn:hover{background:#ffffff28}
+#speed{font-size:12px}
+#status{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90%,430px);text-align:center;color:#ddd;font-size:14px;pointer-events:none}
+#status[hidden]{display:none}
+#adPanel{position:absolute;z-index:8;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:#08080cf5}
+#adPanel[hidden],#shopeeCard[hidden]{display:none}
+.ad-box{width:min(100%,420px);padding:26px 22px;border:1px solid #ffffff20;border-radius:20px;background:#15151d;text-align:center;box-shadow:0 18px 60px #0008}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#ffc2df;font-weight:800}
+.ad-box h1{font-size:25px;margin:12px 0 8px}.ad-box p{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 18px}
+.ad-actions{display:grid;gap:10px}
+.primary,.secondary{display:block;width:100%;padding:13px 16px;border-radius:12px;text-decoration:none;text-align:center;font-weight:800;border:0}
+.primary{background:linear-gradient(120deg,#ff168b,#a60088);color:#fff}
+.secondary{background:#292936;color:#fff;border:1px solid #ffffff20}
+.note{font-size:11px!important;color:#8f8f9e!important;margin-top:14px!important}
+#shopeeCard{position:absolute;z-index:7;left:14px;right:14px;bottom:120px;margin:auto;width:min(100% - 28px,480px);display:flex;gap:12px;align-items:center;padding:13px 14px;border-radius:15px;background:#17171ff2;border:1px solid #ffffff2a;box-shadow:0 10px 35px #0009}
+.shopee-copy{min-width:0;flex:1}.shopee-copy strong{display:block;font-size:13px;margin-bottom:4px}.shopee-copy small{display:block;color:#c4c4cf;font-size:11px;line-height:1.4}
+.shopee-link{white-space:nowrap;background:#f5a623;color:#201400;padding:10px 12px;border-radius:9px;font-size:12px;font-weight:900;text-decoration:none}
+.close-ad{align-self:flex-start;background:transparent;border:0;color:#ddd;font-size:20px;padding:0 0 0 2px}
+#app.ui-hidden .topbar,#app.ui-hidden .controls{opacity:0;pointer-events:none}
+#app:fullscreen{width:100vw;height:100vh}
+@media(max-width:520px){.topbar{padding-left:10px;padding-right:10px}.brand{font-size:16px}.controls{padding-left:10px;padding-right:10px}.control-row{gap:5px}.ctrl{min-width:33px;height:35px;padding:0 7px}.time{font-size:11px}#shopeeCard{bottom:112px}}
+</style>
 </head>
 <body>
-  <header>
-    <div class="logo">VIDY<span>.</span></div>
-    <a href="#video">Player Video</a>
+<main id="app" aria-label="VIDY video player">
+  <video id="video" playsinline preload="metadata"></video>
+  <header class="topbar">
+    <div class="brand">VID<span>Y</span></div>
+    <div class="top-actions">
+      <button class="pill" id="shareBtn" type="button">Bagikan</button>
+      <a class="pill" id="downloadBtn" href="#" download target="_blank" rel="noopener">Unduh</a>
+    </div>
   </header>
 
-  <main id="video">
-    <div class="player" id="player">
-      <div class="placeholder">
-        <strong>VIDY - Player Video</strong>
-        Video akan tampil di sini setelah tautannya ditambahkan.
+  <div id="status">Memuat video…</div>
+
+  <section class="controls" aria-label="Kontrol video">
+    <input id="seek" class="timeline" type="range" min="0" max="1000" value="0" step="1" aria-label="Posisi video">
+    <div class="control-row">
+      <button class="ctrl" id="playBtn" type="button" aria-label="Putar atau jeda">▶</button>
+      <span class="time" id="currentTime">0:00</span><span class="time">/</span><span class="time" id="duration">0:00</span>
+      <div class="spacer"></div>
+      <button class="ctrl" id="speed" type="button" aria-label="Kecepatan pemutaran">1×</button>
+      <button class="ctrl" id="muteBtn" type="button" aria-label="Bisukan suara">🔊</button>
+      <button class="ctrl" id="fullBtn" type="button" aria-label="Layar penuh">⛶</button>
+    </div>
+  </section>
+
+  <aside id="shopeeCard" hidden aria-label="Promosi afiliasi">
+    <div class="shopee-copy">
+      <strong>Rekomendasi produk Shopee</strong>
+      <small>Promosi afiliasi. Jika Anda membeli melalui tautan ini, pemilik situs mungkin memperoleh komisi.</small>
+    </div>
+    <a class="shopee-link" id="shopeeLink" href="#" target="_blank" rel="sponsored noopener noreferrer">Lihat produk</a>
+    <button class="close-ad" id="closeShopee" type="button" aria-label="Tutup promosi">×</button>
+  </aside>
+
+  <section id="adPanel" aria-label="Informasi sponsor">
+    <div class="ad-box">
+      <div class="eyebrow">VIDY • INFORMASI SPONSOR</div>
+      <h1>Sebelum menonton</h1>
+      <p>Anda dapat membuka halaman sponsor secara sukarela, atau langsung melanjutkan ke video. Iklan tidak akan terbuka saat Anda menekan kontrol pemutar.</p>
+      <div class="ad-actions">
+        <a class="primary" id="adsterraLink" href="#" target="_blank" rel="sponsored noopener noreferrer">Buka sponsor</a>
+        <button class="secondary" id="continueBtn" type="button">Lanjutkan ke video</button>
       </div>
+      <p class="note">Tautan sponsor ditandai dengan jelas. Jangan gunakan tautan atau kategori iklan yang tidak sesuai dengan audiens situs Anda.</p>
     </div>
+  </section>
+</main>
+<script>
+(() => {
+  'use strict';
 
-    <h1 id="videoTitle">Video Player</h1>
-    <p class="muted">Tonton video langsung melalui browser Anda.</p>
+  // GANTI dua nilai di bawah dengan tautan milik Anda sendiri.
+  // Gunakan Smartlink Adsterra yang sesuai untuk situs dan audiens umum.
+  const ADSTERRA_SMARTLINK = 'GANTI_DENGAN_URL_SMARTLINK_ADSTERRA_ANDA';
+  const SHOPEE_AFFILIATE_URL = 'GANTI_DENGAN_TAUTAN_PRODUK_SHOPEE_AFFILIATE_ANDA';
 
-    <div class="actions">
-      <a class="download" id="downloadBtn" href="#" hidden download>Unduh Video</a>
-      <button id="shareBtn">Bagikan Video</button>
-      <button class="secondary" id="copyBtn">Salin Tautan</button>
-    </div>
+  const app = document.getElementById('app');
+  const video = document.getElementById('video');
+  const status = document.getElementById('status');
+  const adPanel = document.getElementById('adPanel');
+  const playBtn = document.getElementById('playBtn');
+  const seek = document.getElementById('seek');
+  const currentTime = document.getElementById('currentTime');
+  const duration = document.getElementById('duration');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const adsterraLink = document.getElementById('adsterraLink');
+  const shopeeLink = document.getElementById('shopeeLink');
+  const shopeeCard = document.getElementById('shopeeCard');
 
-    <div class="ad">
-      <div>
-        <strong>ADVERTISEMENT</strong><br>
-        Area iklan — dapat dihubungkan ke penyedia iklan nantinya.
-      </div>
-    </div>
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+  function validHttpUrl(value) {
+    try {
+      const u = new URL(value);
+      return u.protocol === 'https:' || u.protocol === 'http:';
+    } catch (_) { return false; }
+  }
 
-    <section class="sharebox">
-      <strong>Tautan Video</strong>
-      <p class="muted">Buka halaman ini dengan parameter ?v= diikuti URL video Anda.</p>
-      <input id="shareUrl" readonly aria-label="Tautan video halaman ini">
-      <p class="muted" id="status">Siap memutar video.</p>
-    </section>
-  </main>
+  const params = new URLSearchParams(location.search);
+  const videoUrl = params.get('v');
 
-  <footer>
-    VIDY - Player Video · Gunakan hanya video yang Anda punya izin untuk bagikan.
-  </footer>
+  if (validHttpUrl(videoUrl || '')) {
+    video.src = videoUrl;
+    downloadBtn.href = videoUrl;
+    downloadBtn.setAttribute('download', '');
+    status.textContent = 'Memuat video…';
+  } else {
+    status.textContent = 'Tautan video belum tersedia. Buka VIDY dengan parameter ?v=URL_VIDEO.';
+    playBtn.disabled = true;
+    seek.disabled = true;
+  }
 
-  <script>
-    const params = new URLSearchParams(location.search);
-    const videoUrl = params.get('v');
-    const player = document.getElementById('player');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const status = document.getElementById('status');
+  if (validHttpUrl(ADSTERRA_SMARTLINK)) {
+    adsterraLink.href = ADSTERRA_SMARTLINK;
+  } else {
+    adsterraLink.hidden = true;
+  }
+  if (validHttpUrl(SHOPEE_AFFILIATE_URL)) {
+    shopeeLink.href = SHOPEE_AFFILIATE_URL;
+  } else {
+    shopeeCard.hidden = true;
+  }
 
-    function validVideoUrl(value) {
-      try {
-        const url = new URL(value);
-        return url.protocol === 'https:' || url.protocol === 'http:';
-      } catch {
-        return false;
-      }
+  document.getElementById('continueBtn').addEventListener('click', () => {
+    adPanel.hidden = true;
+    if (videoUrl && validHttpUrl(videoUrl)) {
+      video.play().catch(() => {
+        status.hidden = false;
+        status.textContent = 'Tekan tombol ▶ untuk mulai memutar video.';
+      });
     }
+  });
 
-    if (videoUrl && validVideoUrl(videoUrl)) {
-      const video = document.createElement('video');
-      video.controls = true;
-      video.playsInline = true;
-      video.preload = 'metadata';
-      video.src = videoUrl;
-      player.replaceChildren(video);
-      downloadBtn.href = videoUrl;
-      downloadBtn.hidden = false;
-      document.getElementById('videoTitle').textContent = 'Video VIDY';
-      status.textContent = 'Video siap dimuat. Jika gagal, periksa tautan video.';
-    } else {
-      player.innerHTML =
-        '<div class="placeholder"><strong>VIDY - Player Video</strong>' +
-        'Tambahkan tautan video langsung untuk mulai menonton.</div>';
-      status.textContent = 'Belum ada video. Tambahkan parameter ?v=URL_VIDEO.';
+  video.addEventListener('loadedmetadata', () => {
+    duration.textContent = formatTime(video.duration);
+    status.hidden = true;
+  });
+  video.addEventListener('error', () => {
+    status.hidden = false;
+    status.textContent = 'Video gagal dimuat. Periksa tautan video dan pastikan server mengizinkan pemutaran lintas situs.';
+  });
+  video.addEventListener('play', () => { playBtn.textContent = '❚❚'; status.hidden = true; });
+  video.addEventListener('pause', () => { playBtn.textContent = '▶'; });
+  video.addEventListener('timeupdate', () => {
+    currentTime.textContent = formatTime(video.currentTime);
+    if (Number.isFinite(video.duration) && video.duration > 0 && !seek.matches(':active')) {
+      seek.value = String(Math.round(video.currentTime / video.duration * 1000));
     }
+    // Tampilkan promosi setelah 60 detik pemutaran aktual, satu kali per halaman.
+    // Tidak dipicu oleh klik, seek, percepatan, atau kontrol player.
+    if (video.currentTime >= 60 && !shopeeShown && validHttpUrl(SHOPEE_AFFILIATE_URL)) {
+      shopeeShown = true;
+      shopeeCard.hidden = false;
+    }
+  });
 
-    document.getElementById('shareUrl').value = location.href;
+  let shopeeShown = false;
+  playBtn.addEventListener('click', () => {
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+  });
+  seek.addEventListener('input', () => {
+    if (Number.isFinite(video.duration) && video.duration > 0) {
+      video.currentTime = Number(seek.value) / 1000 * video.duration;
+    }
+  });
 
-    document.getElementById('copyBtn').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(location.href);
+  const speeds = [1, 1.25, 1.5, 1.75, 2, 0.5];
+  let speedIndex = 0;
+  document.getElementById('speed').addEventListener('click', (event) => {
+    speedIndex = (speedIndex + 1) % speeds.length;
+    video.playbackRate = speeds[speedIndex];
+    event.currentTarget.textContent = `${speeds[speedIndex]}×`;
+  });
+  document.getElementById('muteBtn').addEventListener('click', (event) => {
+    video.muted = !video.muted;
+    event.currentTarget.textContent = video.muted ? '🔇' : '🔊';
+  });
+  document.getElementById('fullBtn').addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) await app.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch (_) {
+      // Beberapa browser/perangkat tidak mendukung Fullscreen API.
+    }
+  });
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    const url = location.href;
+    try {
+      if (navigator.share) await navigator.share({title:'VIDY — Player Video', url});
+      else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
         status.textContent = 'Tautan berhasil disalin.';
-      } catch {
-        document.getElementById('shareUrl').select();
-        status.textContent = 'Pilih dan salin tautan secara manual.';
-      }
-    });
-
-    document.getElementById('shareBtn').addEventListener('click', async () => {
-      if (navigator.share) {
-        try {
-          await navigator.share({ title: 'VIDY - Player Video', url: location.href });
-        } catch {}
+        status.hidden = false;
+        setTimeout(() => { if (!video.error) status.hidden = true; }, 2200);
       } else {
-        document.getElementById('copyBtn').click();
+        window.prompt('Salin tautan video ini:', url);
       }
-    });
-  </script>
+    } catch (_) {}
+  });
+  document.getElementById('closeShopee').addEventListener('click', () => { shopeeCard.hidden = true; });
+
+  let hideUiTimer;
+  function showUi() {
+    app.classList.remove('ui-hidden');
+    clearTimeout(hideUiTimer);
+    if (!video.paused) hideUiTimer = setTimeout(() => app.classList.add('ui-hidden'), 3500);
+  }
+  app.addEventListener('pointermove', showUi);
+  app.addEventListener('pointerdown', showUi);
+  video.addEventListener('pause', () => app.classList.remove('ui-hidden'));
+})();
+</script>
 </body>
 </html>
-
