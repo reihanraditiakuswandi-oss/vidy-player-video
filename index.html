@@ -1,1 +1,202 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b10">
+  <title>VIDY - Player Video</title>
+  <meta name="description" content="VIDY - Pemutar video online dengan tautan berbagi yang mudah.">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #090b10;
+      color: #f5f7fb;
+      font-family: Arial, sans-serif;
+    }
+    header {
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6%;
+      border-bottom: 1px solid #222733;
+      background: #10131b;
+    }
+    .logo { font-size: 28px; font-weight: 900; letter-spacing: 2px; }
+    .logo span { color: #63a7ff; }
+    header a, footer a { color: #b9c3d5; text-decoration: none; }
+    main { max-width: 960px; margin: 35px auto; padding: 0 18px; }
+    .player {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border: 1px solid #262c38;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    video { width: 100%; height: 100%; object-fit: contain; }
+    .placeholder { color: #9aa5b7; text-align: center; padding: 20px; }
+    .placeholder strong { display: block; font-size: 20px; margin-bottom: 8px; }
+    h1 { font-size: 24px; margin: 22px 0 8px; }
+    .muted { color: #9aa5b7; font-size: 14px; line-height: 1.6; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+    button, .download {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 17px;
+      background: #2678ee;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    button.secondary { background: #222938; }
+    .ad {
+      min-height: 90px;
+      margin: 24px 0;
+      border: 1px dashed #414958;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 15px;
+      color: #8792a5;
+      font-size: 13px;
+    }
+    .sharebox {
+      background: #141923;
+      border: 1px solid #292f3c;
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .sharebox input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 7px;
+      border: 1px solid #394254;
+      background: #090b10;
+      color: white;
+    }
+    footer {
+      text-align: center;
+      padding: 28px 16px;
+      border-top: 1px solid #222733;
+      color: #8993a5;
+      font-size: 13px;
+    }
+    @media (max-width: 600px) {
+      header { padding: 0 18px; }
+      main { margin-top: 20px; }
+      h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">VIDY<span>.</span></div>
+    <a href="#video">Player Video</a>
+  </header>
+
+  <main id="video">
+    <div class="player" id="player">
+      <div class="placeholder">
+        <strong>VIDY - Player Video</strong>
+        Video akan tampil di sini setelah tautannya ditambahkan.
+      </div>
+    </div>
+
+    <h1 id="videoTitle">Video Player</h1>
+    <p class="muted">Tonton video langsung melalui browser Anda.</p>
+
+    <div class="actions">
+      <a class="download" id="downloadBtn" href="#" hidden download>Unduh Video</a>
+      <button id="shareBtn">Bagikan Video</button>
+      <button class="secondary" id="copyBtn">Salin Tautan</button>
+    </div>
+
+    <div class="ad">
+      <div>
+        <strong>ADVERTISEMENT</strong><br>
+        Area iklan — dapat dihubungkan ke penyedia iklan nantinya.
+      </div>
+    </div>
+
+    <section class="sharebox">
+      <strong>Tautan Video</strong>
+      <p class="muted">Buka halaman ini dengan parameter ?v= diikuti URL video Anda.</p>
+      <input id="shareUrl" readonly aria-label="Tautan video halaman ini">
+      <p class="muted" id="status">Siap memutar video.</p>
+    </section>
+  </main>
+
+  <footer>
+    VIDY - Player Video · Gunakan hanya video yang Anda punya izin untuk bagikan.
+  </footer>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const videoUrl = params.get('v');
+    const player = document.getElementById('player');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const status = document.getElementById('status');
+
+    function validVideoUrl(value) {
+      try {
+        const url = new URL(value);
+        return url.protocol === 'https:' || url.protocol === 'http:';
+      } catch {
+        return false;
+      }
+    }
+
+    if (videoUrl && validVideoUrl(videoUrl)) {
+      const video = document.createElement('video');
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      video.src = videoUrl;
+      player.replaceChildren(video);
+      downloadBtn.href = videoUrl;
+      downloadBtn.hidden = false;
+      document.getElementById('videoTitle').textContent = 'Video VIDY';
+      status.textContent = 'Video siap dimuat. Jika gagal, periksa tautan video.';
+    } else {
+      player.innerHTML =
+        '<div class="placeholder"><strong>VIDY - Player Video</strong>' +
+        'Tambahkan tautan video langsung untuk mulai menonton.</div>';
+      status.textContent = 'Belum ada video. Tambahkan parameter ?v=URL_VIDEO.';
+    }
+
+    document.getElementById('shareUrl').value = location.href;
+
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        status.textContent = 'Tautan berhasil disalin.';
+      } catch {
+        document.getElementById('shareUrl').select();
+        status.textContent = 'Pilih dan salin tautan secara manual.';
+      }
+    });
+
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'VIDY - Player Video', url: location.href });
+        } catch {}
+      } else {
+        document.getElementById('copyBtn').click();
+      }
+    });
+  </script>
+</body>
+</html>
+
