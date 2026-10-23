@@ -164,6 +164,11 @@ button{cursor:pointer}
 
   document.getElementById('continueBtn').addEventListener('click', () => {
     adPanel.hidden = true;
+    // Setelah penonton memilih lanjutkan, mulai video secara langsung.
+    video.play().catch(() => {
+      status.textContent = 'Tekan tombol Play untuk mulai menonton.';
+      status.hidden = false;
+    });
   });
 
   video.addEventListener('loadedmetadata', () => {
@@ -182,9 +187,20 @@ button{cursor:pointer}
       seek.value = String(Math.round(video.currentTime / video.duration * 1000));
     }
   });
+  let sponsorShown = false;
   playBtn.addEventListener('click', () => {
-    if (video.paused) video.play().catch(() => {});
-    else video.pause();
+    if (video.paused) {
+      // Tampilkan overlay sponsor hanya pada percobaan Play pertama.
+      // Tidak dipicu ulang oleh pause, seek, volume, atau perubahan kecepatan.
+      if (!sponsorShown && validHttpUrl(ADSTERRA_SMARTLINK)) {
+        sponsorShown = true;
+        adPanel.hidden = false;
+        return;
+      }
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
   });
   seek.addEventListener('input', () => {
     if (Number.isFinite(video.duration) && video.duration > 0) {
