@@ -105,7 +105,7 @@ button{cursor:pointer}
   // GANTI dua nilai di bawah dengan tautan milik Anda sendiri.
   // Gunakan Smartlink Adsterra yang sesuai untuk situs dan audiens umum.
   const ADSTERRA_SMARTLINK = 'https://auctionr.org/4/60cb60e3050fe037f72088a700cab7ca';
-  const SHOPEE_AFFILIATE_URL = 'GANTI_DENGAN_TAUTAN_PRODUK_SHOPEE_AFFILIATE_ANDA';
+  const SHOPEE_AFFILIATE_URL = 'https://s.shopee.co.id/4LKJnCs3pj';
 
   const app = document.getElementById('app');
   const video = document.getElementById('video');
@@ -181,15 +181,7 @@ button{cursor:pointer}
     if (Number.isFinite(video.duration) && video.duration > 0 && !seek.matches(':active')) {
       seek.value = String(Math.round(video.currentTime / video.duration * 1000));
     }
-    // Tampilkan promosi setelah 60 detik pemutaran aktual, satu kali per halaman.
-    // Tidak dipicu oleh klik, seek, percepatan, atau kontrol player.
-    if (video.currentTime >= 60 && !shopeeShown && validHttpUrl(SHOPEE_AFFILIATE_URL)) {
-      shopeeShown = true;
-      shopeeCard.hidden = false;
-    }
   });
-
-  let shopeeShown = false;
   playBtn.addEventListener('click', () => {
     if (video.paused) video.play().catch(() => {});
     else video.pause();
@@ -202,10 +194,18 @@ button{cursor:pointer}
 
   const speeds = [1, 1.25, 1.5, 1.75, 2, 0.5];
   let speedIndex = 0;
+  let shopeeShown = false;
   document.getElementById('speed').addEventListener('click', (event) => {
     speedIndex = (speedIndex + 1) % speeds.length;
     video.playbackRate = speeds[speedIndex];
     event.currentTarget.textContent = `${speeds[speedIndex]}×`;
+
+    // Tampilkan kartu Shopee satu kali saat penonton menaikkan kecepatan di atas 1x.
+    // Tidak membuka tautan atau mengalihkan penonton secara otomatis.
+    if (video.playbackRate > 1 && !shopeeShown && validHttpUrl(SHOPEE_AFFILIATE_URL)) {
+      shopeeShown = true;
+      shopeeCard.hidden = false;
+    }
   });
   document.getElementById('muteBtn').addEventListener('click', (event) => {
     video.muted = !video.muted;
